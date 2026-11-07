@@ -29,7 +29,7 @@ pipeline {
                 sh '''
                     docker build \
                     -t jenkins-nodejs-demo:v1 \
-                    -f Dockerfile.app .
+                    -f Dockerfile .
                 '''
             }
         }
