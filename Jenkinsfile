@@ -1,5 +1,3 @@
-
-
 pipeline {
     agent {
         label 'linux-agent'
@@ -25,11 +23,27 @@ pipeline {
                 sh 'npm test'
             }
         }
+
+        stage('Docker Build') {
+            steps {
+                sh '''
+                    docker build \
+                    -t jenkins-nodejs-demo:v1 \
+                    -f Dockerfile.app .
+                '''
+            }
+        }
+
+        stage('Docker Image Verification') {
+            steps {
+                sh 'docker images jenkins-nodejs-demo:v1'
+            }
+        }
     }
 
     post {
         success {
-            echo 'CI Pipeline completed successfully!'
+            echo 'CI Pipeline with Docker Build completed successfully!'
         }
 
         failure {
@@ -37,4 +51,3 @@ pipeline {
         }
     }
 }
-
