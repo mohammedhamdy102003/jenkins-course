@@ -3,6 +3,10 @@ pipeline {
         label 'linux-agent'
     }
 
+    tools {
+        maven 'Maven-3'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -10,44 +14,39 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Check Tools') {
             steps {
-                echo 'Building Node.js application...'
-                sh 'node --check app.js'
-                sh 'node --check test.js'
+                sh 'java -version'
+                sh 'mvn -version'
             }
         }
 
-        stage('Test') {
+        stage('Build & Test') {
             steps {
-                sh 'npm test'
+                dir('maven-demo') {
+                    sh 'mvn clean test'
+                }
             }
         }
 
-        stage('Docker Build') {
+        stage('Package') {
             steps {
-                sh '''
-                    docker build \
-                    -t jenkins-nodejs-demo:v1 \
-                    -f Dockerfile .
-                '''
+                dir('maven-demo') {
+                    sh 'mvn package'
+                }
             }
         }
 
-        stage('Docker Image Verification') {
+        stage('Archive JAR') {
             steps {
-                sh 'docker images jenkins-nodejs-demo:v1'
+                archiveArtifacts artifacts: 'maven-demo/target/*.jar', fingerprint: true
             }
         }
     }
 
     post {
-        success {
-            echo 'CI Pipeline with Docker Build completed successfully!'
-        }
-
-        failure {
-            echo 'CI Pipeline failed!'
+        always {
+            junit 'maven-demo/target/surefire-reports/*.xml'
         }
     }
 }
